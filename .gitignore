@@ -1,0 +1,4 @@
+store.json
+runs/
+.env
+__pycache__/
