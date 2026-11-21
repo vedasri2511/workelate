@@ -1179,6 +1179,13 @@ def cmd_chat(person, at):
             print("Sorry, I can't share that (" + res["refused"]["reason"] + ").")
         else:
             print("I have nothing on that.")
+def cmd_test(days):
+    """One command: replay the days with the organisers' runner, then print their score."""
+    import subprocess
+    me = os.path.abspath(__file__).replace("\\", "/")      # forward slashes work on Windows too
+    py = sys.executable.replace("\\", "/")
+    subprocess.run([sys.executable, "tools/run_days.py", "--cmd", f'"{py}" "{me}"', "--days", days, "--out", "runs/mine"])
+    subprocess.run([sys.executable, "tools/score.py", "--run", "runs/mine", "--days", days])
 
 # =====================================================================
 # 6. Command line
@@ -1192,7 +1199,9 @@ def main():
     s.add_argument("--ask", required=True)
     s = sub.add_parser("forget"); s.add_argument("--person", required=True); s.add_argument("--what", required=True)
     s = sub.add_parser("audit");  s.add_argument("--person", required=True)
-    s = sub.add_parser("chat");   s.add_argument("--person", required=True); s.add_argument("--at", default=None)
+    s = sub.add_parser("chat");   s.add_argument("who", nargs="?", default="p02"); s.add_argument("--person")
+    s.add_argument("--at", default=None)
+    s = sub.add_parser("test");   s.add_argument("--days", default="1-5")
     a = p.parse_args()
     try:
         if a.cmd == "ingest": cmd_ingest(a.day)
@@ -1200,7 +1209,8 @@ def main():
         if a.cmd == "ask":    cmd_ask(a.person, a.at, a.ask)
         if a.cmd == "forget": cmd_forget(a.person, a.what)
         if a.cmd == "audit":  cmd_audit(a.person)
-        if a.cmd == "chat":   cmd_chat(a.person, a.at)
+        if a.cmd == "chat":   cmd_chat(a.person or a.who, a.at)
+        if a.cmd == "test":   cmd_test(a.days)
     except Exception as e:                       # never crash the harness; say we know nothing
         print(f"error: {e!r}", file=sys.stderr)
         if a.cmd == "brief":
